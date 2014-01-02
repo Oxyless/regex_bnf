@@ -1,0 +1,90 @@
+;-------------------------------------- Token
+token :== !'\0\1\2\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21\22\23\24\25\26\27\28\29\30\31\32\127()<>@,;:\\"/[]?={}\32\9'
+tvalue :== !"\0\1\2\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21\22\23\24\25\26\27\28\29\30\31\32\127"
+CRLF :==  "\13\10"
+
+;-------------------------------------- Axiome ( Début de la grammaire) :
+
+Request :=> Request-Line CRLF Headers  CRLF ; [ Body ]
+
+;----------------------------------------- Body ---------------------------
+Body :=> !""
+
+;---------------------------------------- Headers -----------------------
+Headers :=> *(hkey ":" hvalue CRLF)
+hkey :=> $":"
+hvalue :=> $"\13\10"
+quoted_text :=> '\"' !"\"" '\"'
+
+;-------------------------------------- Request-Line --------------------------
+
+Request-Line :== Method Request-URI HTTP-Version
+
+;---------- Method :
+
+Method :== "OPTIONS" | "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "TRACE" | "CONNECT" 
+
+;---------- Request URI :
+
+Request-URI :== "*" | absoluteURI | abs-path | authority  [ query ]
+
+;---------- HTTP-Version :
+
+HTTP-Version :== HVERSION MAJORMINOR
+
+HVERSION	:== "HTTP" "/"
+MAJORMINOR :== ~"0123456789" "." ~"0123456789"
+
+;------------ absoluteURI :
+
+absoluteURI :== scheme doublePoint ( hier-part | opaque-part )
+doublePoint :== ":"
+scheme :== ~"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-.%"
+hier-part :== ( net-path | abs-path )
+net-path :== doubleSlash authority [ abs-path ]
+doubleSlash :== "//"
+query :== "?" ~"-_.!~*'()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;/?:@&=+$,%"
+escaped :== "%" 1~"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" 1~"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+opaque-part :==  ~"-_.!~*'()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;/?:@&=+$,%"
+
+;------------ authority :
+
+authority :== server | reg-name 
+server :== [ userinfo arobase ] hostport
+arobase :== "@"
+userinfo :== ~"~-_.!~*'()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$,;:&=+%"
+reg-name :== ~"-_.!~*'()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$,;:&=+%"
+
+;------------ abs_path :
+
+abs-path :== ~"/-_.!~*'()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$,;:&=+%"
+			*(";" ~"-_.!~*'()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$,;:&=+%")
+
+
+;-------- hostport_pseudonym :
+
+hostport-pseudonym :== hostport | pseudonym
+pseudonym :== token
+hostport :== host [ ":" port ]
+host :== hostname | IPv4address
+hostname :== *(domainlabel ".") toplabel [ "." ]
+domainlabel :== ~"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-%"
+toplabel :== ~"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-%"
+IPv4address :== ~"0123456789" "." ~"0123456789" "." ~"0123456789" "." ~"0123456789"
+port :== *(~"0123456789")
+
+;---------------------
+
+;reserved :=> ~";/?:@&=+$,"
+;mark :=> ~"-_.!~*'()"
+;ahphanum :=> ~"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+;unreserved :=> ~"-_.!~*'()0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+;------- SSL REQ
+SSL_REQ :=> SSL_PORT SSL_MODULE SSL_METHOD SSL_OTHER
+
+SSL_PORT :=> ~"1234567890"
+SSL_MODULE :=> ~"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+SSL_METHOD :=> ("load" | "unload" | "stop" | "reload")
+SSL_OTHER :=> !""
